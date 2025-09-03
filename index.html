@@ -1,220 +1,185 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Validasi Data Siswa</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 2rem; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; min-height: 100vh; color: #333; }
-        .container { max-width: 900px; width: 100%; padding: 3rem; background-color: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); margin-bottom: 2rem; }
-        h1, h2 { text-align: center; color: #333; margin-bottom: 1.5rem; }
-        .form-group { margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 1rem; }
-        .form-field { flex: 1 1 calc(50% - 0.5rem); min-width: 280px; }
-        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555; }
-        input, select, textarea { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; transition: border-color 0.3s; }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: #007bff; box-shadow: 0 0 5px rgba(0, 123, 255, 0.25); }
-        textarea { resize: vertical; min-height: 80px; }
-        button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background-color 0.3s, transform 0.2s; margin-top: 1rem; }
-        button:hover { background-color: #0056b3; transform: translateY(-2px); }
-        button:active { transform: translateY(0); }
-        #response { margin-top: 1.5rem; padding: 1rem; border-radius: 8px; text-align: center; font-weight: bold; font-size: 0.95rem; transition: all 0.3s; }
-        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .info { background-color: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; }
-        .search-container { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
-        .search-container input { flex-grow: 1; }
-        .search-container button { width: auto; padding: 10px 15px; font-size: 0.9rem; margin-top: 0; }
-        #studentList { width: 100%; border-collapse: collapse; margin-top: 2rem; background-color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden; }
-        #studentList th, #studentList td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
-        #studentList th { background-color: #e9ecef; font-weight: 600; color: #555; text-transform: uppercase; font-size: 0.85rem; }
-        #studentList tr:hover { background-color: #f8f9fa; }
-        .action-buttons { display: flex; gap: 0.5rem; }
-        .action-buttons button { padding: 6px 10px; font-size: 0.8rem; margin: 0; }
-        .load-more-btn { background-color: #6c757d; margin-top: 1.5rem; }
-        .load-more-btn:hover { background-color: #5a6268; }
-        @media (max-width: 768px) {
-            .container { padding: 2rem; }
-            .form-field { flex: 1 1 100%; min-width: unset; }
-        }
-        @media (max-width: 480px) {
-            body { padding: 1rem; }
-            .container { padding: 1.5rem; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Data Siswa</h1>
-        <p>Aplikasi ini memungkinkan Anda memvalidasi atau memperbarui data siswa. Jika NISN sudah ada, data akan diperbarui (status Perbaikan). Jika NISN baru, data akan ditambahkan (status Valid).</p>
+<script>
+  // Ganti dengan URL Aplikasi Web dari Apps Script Anda
+  const API_URL = 'https://script.google.com/a/macros/guru.smk.belajar.id/s/AKfycbxcljwH55OqiMlwzD59Q9KWKpRQGPUX7JIx7sCQrgQSP0hfU_cTY6ctX4erfII0XWDJxw/exec'; 
+  var currentStudentData = null;
 
-        <div class="search-container">
-            <input type="text" id="nameSearch" placeholder="Cari nama lengkap siswa...">
-            <button id="searchNameButton">Cari Berdasarkan Nama</button>
-        </div>
-        
-        <h2>Formulir Validasi/Perbaikan Data Siswa</h2>
-        <form id="studentForm">
-            <div class="form-group">
-                <div class="form-field"><label for="Nama_Lengkap">Nama Lengkap:</label><input type="text" id="Nama_Lengkap" name="Nama_Lengkap" required></div>
-                <div class="form-field"><label for="NISN">NISN (10 Digit):</label><input type="text" id="NISN" name="NISN" pattern="\d{10}" title="NISN harus 10 digit angka" required></div>
-                <div class="form-field"><label for="Tempat_Lahir">Tempat Lahir:</label><input type="text" id="Tempat_Lahir" name="Tempat_Lahir" required></div>
-                <div class="form-field"><label for="Tanggal_Lahir">Tanggal Lahir:</label><input type="date" id="Tanggal_Lahir" name="Tanggal_Lahir" required></div>
-                <div class="form-field"><label for="Jenis_Kelamin">Jenis Kelamin:</label><select id="Jenis_Kelamin" name="Jenis_Kelamin" required><option value="">Pilih...</option><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
-                <div class="form-field"><label for="Agama">Agama:</label><input type="text" id="Agama" name="Agama" required></div>
-                <div class="form-field"><label for="Asal_Sekolah">Asal Sekolah:</label><input type="text" id="Asal_Sekolah" name="Asal_Sekolah" required></div>
-                <div class="form-field"><label for="Tahun_Lulus">Tahun Lulus (4 Digit):</label><input type="text" id="Tahun_Lulus" name="Tahun_Lulus" pattern="\d{4}" title="Tahun Lulus harus 4 digit angka" required></div>
-                <div class="form-field" style="flex: 1 1 100%;"><label for="Alamat">Alamat:</label><textarea id="Alamat" name="Alamat" required></textarea></div>
-            </div>
-            <button type="submit">Validasi & Simpan Data</button>
-        </form>
-        <div id="response"></div>
-    </div>
-    <div class="container">
-        <h2>Daftar Data Siswa (dari Spreadsheet)</h2>
-        <table id="studentList">
-            <thead>
-                <tr>
-                    <th>NISN</th>
-                    <th>Nama Lengkap</th>
-                    <th>Asal Sekolah</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-        <button id="loadAllButton" class="load-more-btn">Muat Ulang Semua Data</button>
-    </div>
-    <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwdE_k1JNP84PPns5fe_Z0ieLyHX-QclKolEeUZb_eb64GFfWMmOfFD_fWj5ozo6rMH/exec"; // GANTI DENGAN URL API APPS SCRIPT ANDA!
-        document.addEventListener('DOMContentLoaded', loadAllStudents);
-        document.getElementById('studentForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = {};
-            const inputs = this.querySelectorAll('input, select, textarea');
-            inputs.forEach(input => { formData[input.name] = input.value; });
-            sendDataToAPI('validateData', formData);
-        });
-        document.getElementById('searchNameButton').addEventListener('click', function() {
-            const nameToSearch = document.getElementById('nameSearch').value.trim();
-            if (nameToSearch) {
-                searchStudentsByName(nameToSearch);
-            } else {
-                displayResponse('error', 'Masukkan nama untuk mencari.');
-            }
-        });
-        document.getElementById('loadAllButton').addEventListener('click', loadAllStudents);
+  async function searchStudent() {
+    var name = document.getElementById('studentName').value.trim();
+    document.getElementById('message').style.display = 'none';
+    document.getElementById('errorMessage').style.display = 'none';
+    document.getElementById('validationActions').style.display = 'none';
+    document.getElementById('studentData').innerHTML = '';
+    document.getElementById('updateForm').style.display = 'none';
 
-        function sendDataToAPI(action, data) {
-            fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: action, formData: data }),
-                headers: { 'Content-Type': 'application/json' }
-            })
-            .then(response => response.json())
-            .then(result => {
-                displayResponse(result.status, result.message);
-                if (result.status === 'success') {
-                    document.getElementById('studentForm').reset();
-                    loadAllStudents();
-                }
-            })
-            .catch(error => {
-                displayResponse('error', 'Terjadi kesalahan saat berkomunikasi dengan server: ' + error.message);
-                console.error('Error:', error);
-            });
+    if (name === '') {
+      showError(new Error('Mohon masukkan Nama Lengkap.'));
+      return;
+    }
+
+    document.getElementById('message').textContent = 'Mencari data siswa...';
+    document.getElementById('message').style.display = 'block';
+
+    try {
+      const response = await fetch(`${API_URL}?name=${encodeURIComponent(name)}`);
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      const data = await response.json();
+      displayStudentData(data);
+    } catch (error) {
+      showError(error);
+    }
+  }
+
+  function displayStudentData(data) {
+    document.getElementById('message').style.display = 'none';
+    var studentDataDiv = document.getElementById('studentData');
+    if (data && !data.error) {
+      currentStudentData = data;
+      let html = '';
+      const labels = {
+        "No": "No", "Jurusan": "Jurusan", "ID": "ID", "Timestamp": "Timestamp",
+        "Nama Lengkap": "Nama Lengkap", "NISN": "NISN", "Tempat Lahir": "Tempat Lahir",
+        "Tanggal Lahir": "Tanggal Lahir", "Jenis Kelamin": "Jenis Kelamin", "Agama": "Agama",
+        "Asal Sekolah": "Asal Sekolah", "Tahun Lulus": "Tahun Lulus", "Alamat": "Alamat",
+        "Diperbarui Oleh": "Diperbarui Oleh", "Tanggal Diperbarui": "Tanggal Diperbarui",
+        "Status Validasi": "Status Validasi"
+      };
+      for (const key in labels) {
+        if (data.hasOwnProperty(key) && key !== "Timestamp") {
+          html += `<div class="data-row"><span class="data-label">${labels[key]}:</span> <span class="data-value">${data[key]}</span></div>`;
         }
-        function loadAllStudents() {
-            displayResponse('info', 'Memuat semua data siswa...');
-            fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'getAllStudents' }),
-                headers: { 'Content-Type': 'application/json' }
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.status === 'success') {
-                    renderStudentList(result.data);
-                    displayResponse('success', `Berhasil memuat ${result.data.length} data siswa.`);
-                } else {
-                    displayResponse('error', 'Gagal memuat data: ' + result.message);
-                }
-            })
-            .catch(error => {
-                displayResponse('error', 'Terjadi kesalahan saat memuat data: ' + error.message);
-                console.error('Error loading all students:', error);
-            });
-        }
-        function searchStudentsByName(searchQuery) {
-            displayResponse('info', 'Mencari data siswa...');
-            fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'getStudentsByName', searchQuery: searchQuery }),
-                headers: { 'Content-Type': 'application/json' }
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.status === 'success') {
-                    renderStudentList(result.data);
-                    displayResponse('success', `Ditemukan ${result.data.length} hasil untuk "${searchQuery}".`);
-                } else {
-                    displayResponse('error', 'Gagal mencari data siswa: ' + result.message);
-                }
-            })
-            .catch(error => {
-                displayResponse('error', 'Terjadi kesalahan saat mencari data: ' + error.message);
-                console.error('Error searching by name:', error);
-            });
-        }
-        function renderStudentList(students) {
-            const tbody = document.getElementById('studentList').querySelector('tbody');
-            tbody.innerHTML = '';
-            if (students.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Tidak ada data siswa.</td></tr>';
-                return;
-            }
-            students.forEach(student => {
-                const tr = document.createElement('tr');
-                const nisn = student.NISN || '';
-                tr.innerHTML = `
-                    <td>${nisn}</td>
-                    <td>${student.Nama_Lengkap || '-'}</td>
-                    <td>${student.Asal_Sekolah || '-'}</td>
-                    <td>${student.Status_Validasi || 'Belum Validasi'}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button onclick="fillFormFromStudent('${nisn}')">Edit</button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-        function fillFormFromStudent(nisn) {
-            const tableRows = document.getElementById('studentList').querySelectorAll('tbody tr');
-            for (let row of tableRows) {
-                const rowNisn = row.cells[0].textContent;
-                if (rowNisn === nisn) {
-                    const student = {};
-                    const headers = ['NISN', 'Nama_Lengkap', 'Asal_Sekolah', 'Status_Validasi'];
-                    for(let i = 0; i < headers.length; i++) {
-                        student[headers[i]] = row.cells[i].textContent;
-                    }
-                    // Since the table only shows some fields, we need to re-fetch the full data to fill the form.
-                    // A better approach would be to store the full data in a global variable after the initial fetch.
-                    // For now, let's just alert the user.
-                    alert('Mohon gunakan NISN untuk mencari dan mengisi formulir secara lengkap di kolom pencarian NISN');
-                    document.getElementById('nisnSearch').value = nisn;
-                    document.getElementById('nisnSearch').focus();
-                    return;
-                }
-            }
-        }
-        function displayResponse(status, message) {
-            const responseDiv = document.getElementById('response');
-            responseDiv.textContent = message;
-            responseDiv.className = status;
-        }
-    </script>
-</body>
-</html>
+      }
+      studentDataDiv.innerHTML = html;
+      document.getElementById('validationActions').style.display = 'block';
+    } else {
+      studentDataDiv.innerHTML = `<p>${data ? data.error : 'Data siswa tidak ditemukan. Mohon periksa kembali nama yang Anda masukkan.'}</p>`;
+    }
+  }
+
+  async function confirmData() {
+    if (!currentStudentData || !currentStudentData["ID"]) {
+      showError(new Error("Tidak ada data siswa atau ID siswa tidak ditemukan untuk validasi."));
+      return;
+    }
+
+    document.getElementById('message').textContent = 'Merekam status validasi...';
+    document.getElementById('message').style.display = 'block';
+    document.getElementById('validationActions').style.display = 'none';
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'validate',
+          studentId: currentStudentData["ID"]
+        })
+      });
+      const result = await response.json();
+      if (result.status === 'success') {
+        showUpdateSuccess('Data Anda telah divalidasi sebagai benar. Terima kasih.');
+      } else {
+        showError(new Error('Gagal mencatat status validasi: ' + (result.error || 'Unknown error')));
+      }
+    } catch (error) {
+      showError(error);
+    }
+  }
+
+  async function submitUpdate() {
+    var formData = {};
+    var formElements = document.getElementById('studentUpdateForm').elements;
+    for (var i = 0; i < formElements.length; i++) {
+      var element = formElements[i];
+      if (element.name) {
+        formData[element.name] = element.value;
+      }
+    }
+
+    document.getElementById('message').textContent = 'Menyimpan perubahan data...';
+    document.getElementById('message').style.display = 'block';
+    document.getElementById('errorMessage').style.display = 'none';
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'update',
+          formData: formData
+        })
+      });
+      const result = await response.json();
+      if (result.status === 'success') {
+        showUpdateSuccess('Data Anda berhasil diperbarui. Terima kasih.');
+      } else {
+        showError(new Error('Gagal memperbarui data: ' + (result.error || 'Unknown error')));
+      }
+    } catch (error) {
+      showError(error);
+    }
+  }
+
+  // ... (fungsi lain seperti showUpdateForm, cancelUpdate, showError, showUpdateSuccess tetap sama) ...
+  function showUpdateForm() {
+    if (!currentStudentData) return;
+    document.getElementById('searchSection').style.display = 'none';
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('updateForm').style.display = 'block';
+    document.getElementById('message').style.display = 'none';
+    document.getElementById('updateId').value = currentStudentData["ID"];
+    document.getElementById('updateJurusan').value = currentStudentData["Jurusan"];
+    document.getElementById('updateNamaLengkap').value = currentStudentData["Nama Lengkap"];
+    document.getElementById('updateNISN').value = currentStudentData["NISN"];
+    document.getElementById('updateTempatLahir').value = currentStudentData["Tempat Lahir"];
+    document.getElementById('updateTanggalLahir').value = currentStudentData["Tanggal Lahir"];
+    document.getElementById('updateJenisKelamin').value = currentStudentData["Jenis Kelamin"];
+    document.getElementById('updateAgama').value = currentStudentData["Agama"];
+    document.getElementById('updateAsalSekolah').value = currentStudentData["Asal Sekolah"];
+    document.getElementById('updateTahunLulus').value = currentStudentData["Tahun Lulus"];
+    document.getElementById('updateAlamat').value = currentStudentData["Alamat"];
+  }
+
+  function confirmUpdate() {
+    if (confirm("Apakah Anda yakin ingin menyimpan perubahan data ini?")) {
+      submitUpdate();
+    }
+  }
+
+  function showUpdateSuccess(message) {
+    document.getElementById('updateForm').style.display = 'none';
+    document.getElementById('searchSection').style.display = 'block';
+    document.getElementById('result').style.display = 'block';
+    document.getElementById('message').textContent = message;
+    document.getElementById('message').style.display = 'block';
+    document.getElementById('studentData').innerHTML = '';
+    document.getElementById('studentName').value = '';
+    currentStudentData = null;
+  }
+
+  function cancelUpdate() {
+    document.getElementById('updateForm').style.display = 'none';
+    document.getElementById('searchSection').style.display = 'block';
+    document.getElementById('result').style.display = 'block';
+    document.getElementById('message').style.display = 'none';
+    document.getElementById('errorMessage').style.display = 'none';
+    if (currentStudentData) {
+      displayStudentData(currentStudentData);
+      document.getElementById('validationActions').style.display = 'block';
+    } else {
+      document.getElementById('studentData').innerHTML = '';
+      document.getElementById('validationActions').style.display = 'none';
+    }
+  }
+
+  function showError(error) {
+    document.getElementById('message').style.display = 'none';
+    document.getElementById('errorMessage').textContent = 'Terjadi kesalahan: ' + error.message;
+    document.getElementById('errorMessage').style.display = 'block';
+    document.getElementById('validationActions').style.display = 'none';
+    document.getElementById('studentData').innerHTML = '';
+  }
+</script>
