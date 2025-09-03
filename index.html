@@ -123,182 +123,190 @@
 
   </div>
 
-  <script>
-    var currentStudentData = null; // Menyimpan data siswa yang ditemukan
+ <script>
+  // Ganti dengan URL Aplikasi Web dari Apps Script Anda
+  const API_URL = 'https://script.google.com/a/macros/guru.smk.belajar.id/s/AKfycbxcljwH55OqiMlwzD59Q9KWKpRQGPUX7JIx7sCQrgQSP0hfU_cTY6ctX4erfII0XWDJxw/exec'; 
+  var currentStudentData = null;
 
-    function searchStudent() {
-      var name = document.getElementById('studentName').value.trim();
-      document.getElementById('message').style.display = 'none';
-      document.getElementById('errorMessage').style.display = 'none';
-      document.getElementById('validationActions').style.display = 'none';
-      document.getElementById('studentData').innerHTML = '';
-      document.getElementById('updateForm').style.display = 'none';
+  async function searchStudent() {
+    var name = document.getElementById('studentName').value.trim();
+    document.getElementById('message').style.display = 'none';
+    document.getElementById('errorMessage').style.display = 'none';
+    document.getElementById('validationActions').style.display = 'none';
+    document.getElementById('studentData').innerHTML = '';
+    document.getElementById('updateForm').style.display = 'none';
 
-      if (name === '') {
-        document.getElementById('errorMessage').textContent = 'Mohon masukkan Nama Lengkap.';
-        document.getElementById('errorMessage').style.display = 'block';
-        return;
-      }
-
-      // Tampilkan loading spinner atau pesan
-      document.getElementById('message').textContent = 'Mencari data siswa...';
-      document.getElementById('message').style.display = 'block';
-
-
-      google.script.run
-        .withSuccessHandler(displayStudentData)
-        .withFailureHandler(showError)
-        .searchStudentByName(name);
+    if (name === '') {
+      showError(new Error('Mohon masukkan Nama Lengkap.'));
+      return;
     }
 
-    function displayStudentData(data) {
-      document.getElementById('message').style.display = 'none'; // Sembunyikan pesan loading
-      var studentDataDiv = document.getElementById('studentData');
-      if (data) {
-        currentStudentData = data; // Simpan data untuk update
-        let html = '';
-        const labels = {
-            "No": "No", "Jurusan": "Jurusan", "ID": "ID", "Timestamp": "Timestamp",
-            "Nama Lengkap": "Nama Lengkap", "NISN": "NISN", "Tempat Lahir": "Tempat Lahir",
-            "Tanggal Lahir": "Tanggal Lahir", "Jenis Kelamin": "Jenis Kelamin", "Agama": "Agama",
-            "Asal Sekolah": "Asal Sekolah", "Tahun Lulus": "Tahun Lulus", "Alamat": "Alamat",
-            "Diperbarui Oleh": "Diperbarui Oleh", "Tanggal Diperbarui": "Tanggal Diperbarui",
-            "Status Validasi": "Status Validasi"
-        };
+    document.getElementById('message').textContent = 'Mencari data siswa...';
+    document.getElementById('message').style.display = 'block';
 
-        for (const key in labels) {
-            // Hanya tampilkan jika data ada dan bukan Timestamp (terlalu teknis untuk UI siswa)
-            if (data.hasOwnProperty(key) && key !== "Timestamp") {
-                html += `<div class="data-row"><span class="data-label">${labels[key]}:</span> <span class="data-value">${data[key]}</span></div>`;
-            }
+    try {
+      const response = await fetch(`${API_URL}?name=${encodeURIComponent(name)}`);
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      const data = await response.json();
+      displayStudentData(data);
+    } catch (error) {
+      showError(error);
+    }
+  }
+
+  function displayStudentData(data) {
+    document.getElementById('message').style.display = 'none';
+    var studentDataDiv = document.getElementById('studentData');
+    if (data && !data.error) {
+      currentStudentData = data;
+      let html = '';
+      const labels = {
+        "No": "No", "Jurusan": "Jurusan", "ID": "ID", "Timestamp": "Timestamp",
+        "Nama Lengkap": "Nama Lengkap", "NISN": "NISN", "Tempat Lahir": "Tempat Lahir",
+        "Tanggal Lahir": "Tanggal Lahir", "Jenis Kelamin": "Jenis Kelamin", "Agama": "Agama",
+        "Asal Sekolah": "Asal Sekolah", "Tahun Lulus": "Tahun Lulus", "Alamat": "Alamat",
+        "Diperbarui Oleh": "Diperbarui Oleh", "Tanggal Diperbarui": "Tanggal Diperbarui",
+        "Status Validasi": "Status Validasi"
+      };
+      for (const key in labels) {
+        if (data.hasOwnProperty(key) && key !== "Timestamp") {
+          html += `<div class="data-row"><span class="data-label">${labels[key]}:</span> <span class="data-value">${data[key]}</span></div>`;
         }
-
-        studentDataDiv.innerHTML = html;
-        document.getElementById('validationActions').style.display = 'block';
-      } else {
-        studentDataDiv.innerHTML = '<p>Data siswa tidak ditemukan. Mohon periksa kembali nama yang Anda masukkan.</p>';
       }
+      studentDataDiv.innerHTML = html;
+      document.getElementById('validationActions').style.display = 'block';
+    } else {
+      studentDataDiv.innerHTML = `<p>${data ? data.error : 'Data siswa tidak ditemukan. Mohon periksa kembali nama yang Anda masukkan.'}</p>`;
+    }
+  }
+
+  async function confirmData() {
+    if (!currentStudentData || !currentStudentData["ID"]) {
+      showError(new Error("Tidak ada data siswa atau ID siswa tidak ditemukan untuk validasi."));
+      return;
     }
 
-    function showError(error) {
-      document.getElementById('message').style.display = 'none'; // Sembunyikan pesan loading
-      document.getElementById('errorMessage').textContent = 'Terjadi kesalahan: ' + error.message;
-      document.getElementById('errorMessage').style.display = 'block';
-      document.getElementById('validationActions').style.display = 'none'; // Sembunyikan aksi jika ada error
-      document.getElementById('studentData').innerHTML = ''; // Kosongkan tampilan data
-    }
+    document.getElementById('message').textContent = 'Merekam status validasi...';
+    document.getElementById('message').style.display = 'block';
+    document.getElementById('validationActions').style.display = 'none';
 
-    function confirmData() {
-      if (!currentStudentData || !currentStudentData["ID"]) {
-          showError(new Error("Tidak ada data siswa atau ID siswa tidak ditemukan untuk validasi."));
-          return;
-      }
-
-      // Tampilkan loading atau pesan saat proses validasi
-      document.getElementById('message').textContent = 'Merekam status validasi...';
-      document.getElementById('message').style.display = 'block';
-      document.getElementById('validationActions').style.display = 'none'; // Sembunyikan tombol aksi
-
-      google.script.run
-        .withSuccessHandler(function(status) {
-            if (status === 'success') {
-                document.getElementById('message').textContent = 'Data Anda telah divalidasi sebagai benar. Terima kasih.';
-                document.getElementById('message').style.display = 'block';
-                document.getElementById('studentData').innerHTML = '';
-                document.getElementById('studentName').value = '';
-                currentStudentData = null; // Reset data siswa setelah validasi
-            } else {
-                showError(new Error("Gagal mencatat status validasi."));
-            }
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'validate',
+          studentId: currentStudentData["ID"]
         })
-        .withFailureHandler(showError)
-        .recordValidation(currentStudentData["ID"]);
-    }
-
-    function showUpdateForm() {
-      if (!currentStudentData) return;
-
-      document.getElementById('searchSection').style.display = 'none';
-      document.getElementById('result').style.display = 'none';
-      document.getElementById('updateForm').style.display = 'block';
-      document.getElementById('message').style.display = 'none'; // Sembunyikan pesan sukses/error lain
-
-      // Isi formulir update dengan data yang ada
-      document.getElementById('updateId').value = currentStudentData["ID"];
-      document.getElementById('updateJurusan').value = currentStudentData["Jurusan"];
-      document.getElementById('updateNamaLengkap').value = currentStudentData["Nama Lengkap"];
-      document.getElementById('updateNISN').value = currentStudentData["NISN"];
-      document.getElementById('updateTempatLahir').value = currentStudentData["Tempat Lahir"];
-      document.getElementById('updateTanggalLahir').value = currentStudentData["Tanggal Lahir"];
-      document.getElementById('updateJenisKelamin').value = currentStudentData["Jenis Kelamin"];
-      document.getElementById('updateAgama').value = currentStudentData["Agama"];
-      document.getElementById('updateAsalSekolah').value = currentStudentData["Asal Sekolah"];
-      document.getElementById('updateTahunLulus').value = currentStudentData["Tahun Lulus"];
-      document.getElementById('updateAlamat').value = currentStudentData["Alamat"];
-    }
-
-    function confirmUpdate() {
-        if (confirm("Apakah Anda yakin ingin menyimpan perubahan data ini?")) {
-            submitUpdate();
-        }
-    }
-
-    function submitUpdate() {
-      var formData = {};
-      var formElements = document.getElementById('studentUpdateForm').elements;
-      for (var i = 0; i < formElements.length; i++) {
-        var element = formElements[i];
-        if (element.name) {
-          formData[element.name] = element.value;
-        }
-      }
-
-      document.getElementById('message').style.display = 'none';
-      document.getElementById('errorMessage').style.display = 'none';
-
-      // Tampilkan loading atau pesan saat proses update
-      document.getElementById('message').textContent = 'Menyimpan perubahan data...';
-      document.getElementById('message').style.display = 'block';
-
-
-      google.script.run
-        .withSuccessHandler(showUpdateSuccess)
-        .withFailureHandler(showError)
-        .updateStudentData(formData);
-    }
-
-    function showUpdateSuccess(status) {
-      document.getElementById('message').style.display = 'none'; // Sembunyikan pesan loading
-      if (status === 'success') {
-        document.getElementById('updateForm').style.display = 'none';
-        document.getElementById('searchSection').style.display = 'block';
-        document.getElementById('result').style.display = 'block';
-        document.getElementById('message').textContent = 'Data Anda berhasil diperbarui. Terima kasih.';
-        document.getElementById('message').style.display = 'block';
-        document.getElementById('studentData').innerHTML = '';
-        document.getElementById('studentName').value = '';
-        currentStudentData = null; // Reset data siswa setelah update
+      });
+      const result = await response.json();
+      if (result.status === 'success') {
+        showUpdateSuccess('Data Anda telah divalidasi sebagai benar. Terima kasih.');
       } else {
-        document.getElementById('errorMessage').textContent = 'Gagal memperbarui data.';
-        document.getElementById('errorMessage').style.display = 'block';
+        showError(new Error('Gagal mencatat status validasi: ' + (result.error || 'Unknown error')));
+      }
+    } catch (error) {
+      showError(error);
+    }
+  }
+
+  async function submitUpdate() {
+    var formData = {};
+    var formElements = document.getElementById('studentUpdateForm').elements;
+    for (var i = 0; i < formElements.length; i++) {
+      var element = formElements[i];
+      if (element.name) {
+        formData[element.name] = element.value;
       }
     }
 
-    function cancelUpdate() {
-      document.getElementById('updateForm').style.display = 'none';
-      document.getElementById('searchSection').style.display = 'block';
-      document.getElementById('result').style.display = 'block';
-      document.getElementById('message').style.display = 'none'; // Sembunyikan pesan apapun saat batal
-      document.getElementById('errorMessage').style.display = 'none'; // Sembunyikan pesan apapun saat batal
+    document.getElementById('message').textContent = 'Menyimpan perubahan data...';
+    document.getElementById('message').style.display = 'block';
+    document.getElementById('errorMessage').style.display = 'none';
 
-      if (currentStudentData) {
-          displayStudentData(currentStudentData); // Tampilkan kembali data yang dicari sebelumnya
-          document.getElementById('validationActions').style.display = 'block';
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'update',
+          formData: formData
+        })
+      });
+      const result = await response.json();
+      if (result.status === 'success') {
+        showUpdateSuccess('Data Anda berhasil diperbarui. Terima kasih.');
       } else {
-          document.getElementById('studentData').innerHTML = '';
-          document.getElementById('validationActions').style.display = 'none';
+        showError(new Error('Gagal memperbarui data: ' + (result.error || 'Unknown error')));
       }
+    } catch (error) {
+      showError(error);
     }
-  </script>
+  }
+
+  // ... (fungsi lain seperti showUpdateForm, cancelUpdate, showError, showUpdateSuccess tetap sama) ...
+  function showUpdateForm() {
+    if (!currentStudentData) return;
+    document.getElementById('searchSection').style.display = 'none';
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('updateForm').style.display = 'block';
+    document.getElementById('message').style.display = 'none';
+    document.getElementById('updateId').value = currentStudentData["ID"];
+    document.getElementById('updateJurusan').value = currentStudentData["Jurusan"];
+    document.getElementById('updateNamaLengkap').value = currentStudentData["Nama Lengkap"];
+    document.getElementById('updateNISN').value = currentStudentData["NISN"];
+    document.getElementById('updateTempatLahir').value = currentStudentData["Tempat Lahir"];
+    document.getElementById('updateTanggalLahir').value = currentStudentData["Tanggal Lahir"];
+    document.getElementById('updateJenisKelamin').value = currentStudentData["Jenis Kelamin"];
+    document.getElementById('updateAgama').value = currentStudentData["Agama"];
+    document.getElementById('updateAsalSekolah').value = currentStudentData["Asal Sekolah"];
+    document.getElementById('updateTahunLulus').value = currentStudentData["Tahun Lulus"];
+    document.getElementById('updateAlamat').value = currentStudentData["Alamat"];
+  }
+
+  function confirmUpdate() {
+    if (confirm("Apakah Anda yakin ingin menyimpan perubahan data ini?")) {
+      submitUpdate();
+    }
+  }
+
+  function showUpdateSuccess(message) {
+    document.getElementById('updateForm').style.display = 'none';
+    document.getElementById('searchSection').style.display = 'block';
+    document.getElementById('result').style.display = 'block';
+    document.getElementById('message').textContent = message;
+    document.getElementById('message').style.display = 'block';
+    document.getElementById('studentData').innerHTML = '';
+    document.getElementById('studentName').value = '';
+    currentStudentData = null;
+  }
+
+  function cancelUpdate() {
+    document.getElementById('updateForm').style.display = 'none';
+    document.getElementById('searchSection').style.display = 'block';
+    document.getElementById('result').style.display = 'block';
+    document.getElementById('message').style.display = 'none';
+    document.getElementById('errorMessage').style.display = 'none';
+    if (currentStudentData) {
+      displayStudentData(currentStudentData);
+      document.getElementById('validationActions').style.display = 'block';
+    } else {
+      document.getElementById('studentData').innerHTML = '';
+      document.getElementById('validationActions').style.display = 'none';
+    }
+  }
+
+  function showError(error) {
+    document.getElementById('message').style.display = 'none';
+    document.getElementById('errorMessage').textContent = 'Terjadi kesalahan: ' + error.message;
+    document.getElementById('errorMessage').style.display = 'block';
+    document.getElementById('validationActions').style.display = 'none';
+    document.getElementById('studentData').innerHTML = '';
+  }
+</script>
 </body>
 </html>
