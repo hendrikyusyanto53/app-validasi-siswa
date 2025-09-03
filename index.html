@@ -1,3 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <title>Validasi Data Siswa</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 800px; margin: auto; }
+        h1, h2 { color: #333; text-align: center; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="date"], select {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover { background-color: #0056b3; }
+        .form-group { margin-bottom: 15px; }
+        #result { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+        .data-row { display: flex; flex-wrap: wrap; margin-bottom: 10px; }
+        .data-label { font-weight: bold; width: 150px; flex-shrink: 0; }
+        .data-value { flex-grow: 1; }
+        .success-message { color: green; font-weight: bold; text-align: center; margin-top: 20px; }
+        .error-message { color: red; font-weight: bold; text-align: center; margin-top: 20px; }
+        #updateForm { display: none; }
+        .actions { display: flex; justify-content: space-between; gap: 10px; }
+        .actions button { width: 48%; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Validasi Data Siswa</h1>
+
+        <div id="searchSection">
+            <div class="form-group">
+                <label for="studentName">Nama Lengkap:</label>
+                <input type="text" id="studentName" placeholder="Masukkan Nama Lengkap Anda">
+            </div>
+            <button onclick="searchStudent()">Cari Data</button>
+        </div>
+
+        <div id="result">
+            <h2>Hasil Pencarian</h2>
+            <div id="studentData"></div>
+            <div id="validationActions" style="display:none;">
+                <p>Apakah data di atas sudah benar?</p>
+                <div class="actions">
+                    <button onclick="confirmData()">Ya, Data Benar</button>
+                    <button onclick="showUpdateForm()">Tidak, Perbarui Data</button>
+                </div>
+            </div>
+            <div id="message" class="success-message" style="display:none;"></div>
+            <div id="errorMessage" class="error-message" style="display:none;"></div>
+        </div>
+
+        <div id="updateForm">
+            <h2>Perbarui Data Siswa</h2>
+            <form id="studentUpdateForm">
+                <input type="hidden" id="updateId" name="ID">
+
+                <div class="form-group">
+                    <label for="updateJurusan">Jurusan:</label>
+                    <input type="text" id="updateJurusan" name="Jurusan" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="updateNamaLengkap">Nama Lengkap:</label>
+                    <input type="text" id="updateNamaLengkap" name="Nama Lengkap" >
+                </div>
+                <div class="form-group">
+                    <label for="updateNISN">NISN:</label>
+                    <input type="text" id="updateNISN" name="NISN">
+                </div>
+                <div class="form-group">
+                    <label for="updateTempatLahir">Tempat Lahir:</label>
+                    <input type="text" id="updateTempatLahir" name="Tempat Lahir">
+                </div>
+                <div class="form-group">
+                    <label for="updateTanggalLahir">Tanggal Lahir:</label>
+                    <input type="date" id="updateTanggalLahir" name="Tanggal Lahir">
+                </div>
+                <div class="form-group">
+                    <label for="updateJenisKelamin">Jenis Kelamin:</label>
+                    <select id="updateJenisKelamin" name="Jenis Kelamin">
+                        <option value="">Pilih</option>
+                        <option value="Laki-laki">Laki-laki</option>
+                        <option value="Perempuan">Perempuan</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="updateAgama">Agama:</label>
+                    <input type="text" id="updateAgama" name="Agama">
+                </div>
+                <div class="form-group">
+                    <label for="updateAsalSekolah">Asal Sekolah:</label>
+                    <input type="text" id="updateAsalSekolah" name="Asal Sekolah">
+                </div>
+                <div class="form-group">
+                    <label for="updateTahunLulus">Tahun Lulus:</label>
+                    <input type="text" id="updateTahunLulus" name="Tahun Lulus">
+                </div>
+                <div class="form-group">
+                    <label for="updateAlamat">Alamat:</label>
+                    <input type="text" id="updateAlamat" name="Alamat">
+                </div>
+
+                <button type="button" onclick="confirmUpdate()">Simpan Perubahan</button>
+                <button type="button" onclick="cancelUpdate()" style="background-color: #6c757d;">Batal</button>
+            </form>
+        </div>
+    </div>
+
+
+
 <script>
   // Ganti dengan URL Aplikasi Web dari Apps Script Anda
   const API_URL = 'https://script.google.com/macros/s/AKfycbxcljwH55OqiMlwzD59Q9KWKpRQGPUX7JIx7sCQrgQSP0hfU_cTY6ctX4erfII0XWDJxw/exec'; 
@@ -183,3 +309,7 @@
     document.getElementById('studentData').innerHTML = '';
   }
 </script>
+
+     
+</body>
+</html>
